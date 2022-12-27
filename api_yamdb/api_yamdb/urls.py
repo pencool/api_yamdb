@@ -37,7 +37,7 @@ schema_view = get_schema_view(
       default_version='v1',
       description="Документация для проекта Yamdb",
       # terms_of_service="URL страницы с пользовательским соглашением",
-      contact=openapi.Contact(email="admin@kittygram.ru"),
+      contact=openapi.Contact(email="admin@yamdb.ru"),
       license=openapi.License(name="BSD License"),
    ),
    public=True,
