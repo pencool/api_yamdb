@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator, UniqueTogetherValidator
-from ..yamdb.models import User
+from yamdb.models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
