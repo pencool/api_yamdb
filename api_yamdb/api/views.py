@@ -1,10 +1,11 @@
 from rest_framework import viewsets, status, mixins
+from rest_framework.views import APIView
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework_simplejwt.views import TokenObtainPairView
 from yamdb.models import User
+from rest_framework_simplejwt.tokens import RefreshToken
 from api.serializers import (UserSerializer, SignupSerializer,
-                             CustomTokenObtainSerializer)
+                             CustomTokenSerializer)
 from django.shortcuts import get_object_or_404
 from api.utils import generate_confirm_code
 from api.utils import send_confirm_email
@@ -41,5 +42,11 @@ class SignupViewSet(mixins.CreateModelMixin,
         send_confirm_email(conf_code, **self.request.data)
 
 
-class CustomTokenObtainPairView(TokenObtainPairView):
-    serializer_class = CustomTokenObtainSerializer
+class CustomToken(APIView):
+    serializer_class = CustomTokenSerializer
+
+    def post(self, request):
+        refresh = RefreshToken.for_user(request.user)
+        answer = {'access': str(refresh.access_token)}
+        return Response(answer, status=status.HTTP_200_OK)
+

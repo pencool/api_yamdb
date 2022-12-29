@@ -1,9 +1,5 @@
-from django.contrib.auth import authenticate
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator, UniqueTogetherValidator
-from rest_framework_simplejwt import exceptions
-from rest_framework_simplejwt.serializers import TokenObtainSerializer
-from rest_framework_simplejwt.settings import api_settings
 from yamdb.models import User
 import re
 
@@ -71,27 +67,15 @@ class SignupSerializer(serializers.ModelSerializer):
         return attrs
 
 
-class CustomTokenObtainSerializer(TokenObtainSerializer):
-    def __init__(self, *args, **kwargs):
-        super().__init__(args, kwargs)
-        self.user = None
+class CustomTokenSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=150, write_only=True)
+    confirmation_code = serializers.CharField(max_length=250, write_only=True)
 
     def validate(self, attrs):
-        authenticate_kwargs = {
-            self.username_field: attrs[self.username_field],
-            "confirmation_code": attrs["confirmation_code"],
-        }
-        try:
-            authenticate_kwargs["request"] = self.context["request"]
-        except KeyError:
-            pass
-
-        self.user = authenticate(**authenticate_kwargs)
-
-        if not api_settings.USER_AUTHENTICATION_RULE(self.user):
-            raise exceptions.AuthenticationFailed(
-                self.error_messages["no_active_account"],
-                "no_active_account",
-            )
-
-        return {}
+        if not User.objects.filter(
+                username=attrs['username'],
+                confirmation_code=attrs['confirmation_code']).exists():
+            raise serializers.ValidationError('Пользователя с таким именем '
+                                              'или кодом подтверждения не '
+                                              'существует.')
+        return attrs
