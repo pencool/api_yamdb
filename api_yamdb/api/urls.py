@@ -1,13 +1,11 @@
-import sys
 from django.urls import path, include
 from rest_framework import routers
 from rest_framework_simplejwt.views import TokenObtainPairView
-from api.views import UserViewSet
-
-sys.path.append("..")
+from api.views import UserViewSet, SignupViewSet
 
 router = routers.DefaultRouter()
 router.register(r'users', UserViewSet)
+router.register(r'auth\/signup', SignupViewSet)
 
 urlpatterns = [
     path('api/v1/auth/token/', TokenObtainPairView.as_view(),
