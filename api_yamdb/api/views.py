@@ -5,11 +5,11 @@ from rest_framework.response import Response
 from yamdb.models import User
 from rest_framework_simplejwt.tokens import RefreshToken
 from api.serializers import (UserSerializer, SignupSerializer,
-                             CustomTokenSerializer)
+                             CustomTokenSerializer, MeUserSerializer)
 from django.shortcuts import get_object_or_404
 from api.utils import generate_confirm_code
 from api.utils import send_confirm_email
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -17,18 +17,20 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     lookup_field = 'username'
 
-    @action(methods=['get', 'patch'], detail=True,
+    @action(methods=['get', 'patch'], detail=False,
             queryset=User.objects.all(),
-            # permisson_classes=[''''''],
-            )
+            permission_classes=(IsAuthenticated,),
+            url_path='me',
+    )
     def me(self, request):
-        user = get_object_or_404(User, id=request.user.id)
+        cur_user = get_object_or_404(User, username=request.user.username)
         if request.method == 'PATCH':
-            serializer = UserSerializer(data=request.data)
+            serializer = MeUserSerializer(data=request.data, partial=True)
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
-        serializer = self.get_serializer(user, many=False)
+        #serializer = self.get_serializer(cur_user, many=False)
+        serializer = MeUserSerializer(cur_user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -44,7 +46,7 @@ class SignupViewSet(mixins.CreateModelMixin,
 
 
 class CustomToken(APIView):
-    permission_classes = (AllowAny, )
+    permission_classes = (AllowAny,)
 
     def post(self, request):
         serializer = CustomTokenSerializer(data=request.data)

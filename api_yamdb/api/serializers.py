@@ -1,14 +1,9 @@
 from rest_framework import serializers
-from rest_framework.validators import UniqueValidator, UniqueTogetherValidator
 from yamdb.models import User
 import re
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
-    username = serializers.CharField(max_length=150, validators=[
-        UniqueValidator(queryset=User.objects.all())])
-    email = serializers.EmailField(max_length=254, validators=[
-        UniqueValidator(queryset=User.objects.all())])
 
     class Meta:
         model = User
@@ -17,15 +12,10 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
         extra_kwargs = {
             'url': {'lookup_field': 'username'}
         }
-        validators = [
-            UniqueTogetherValidator(
-                queryset=User.objects.all(),
-                fields=['username', 'email']
-            ),
-        ]
+        required_fields = ['username', 'email']
 
     def validate(self, data):
-        if data['username'] == 'me':
+        if data.get('username') == 'me':
             raise serializers.ValidationError('me запрещено в качесвте '
                                               'имени пользователя!')
         if not re.fullmatch(r'[\w.@+-]+', data['username']):
@@ -36,21 +26,16 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
         return data
 
 
+class MeUserSerializer(UserSerializer):
+    role = serializers.CharField(max_length=50, read_only=True)
+
+
 class SignupSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(max_length=150, validators=[
-        UniqueValidator(queryset=User.objects.all())])
-    email = serializers.EmailField(max_length=254, validators=[
-        UniqueValidator(queryset=User.objects.all())])
 
     class Meta:
         model = User
         fields = ('username', 'email')
-        validators = [
-            UniqueTogetherValidator(
-                queryset=User.objects.all(),
-                fields=['username', 'email']
-            )
-        ]
+        required_fields = ['username', 'email']
 
     def validate(self, attrs):
         if User.objects.filter(**attrs).exists():

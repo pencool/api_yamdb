@@ -23,11 +23,5 @@ class User(AbstractUser):
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email']
 
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=['username', 'email'], name='unique_fields'),
-        ]
-
     def __str__(self):
         return self.username
