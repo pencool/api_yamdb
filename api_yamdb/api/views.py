@@ -9,6 +9,7 @@ from api.serializers import (UserSerializer, SignupSerializer,
 from django.shortcuts import get_object_or_404
 from api.utils import generate_confirm_code
 from api.utils import send_confirm_email
+from rest_framework.permissions import AllowAny
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -43,6 +44,7 @@ class SignupViewSet(mixins.CreateModelMixin,
 
 
 class CustomToken(APIView):
+    permission_classes = (AllowAny, )
 
     def post(self, request):
         serializer = CustomTokenSerializer(data=request.data)
