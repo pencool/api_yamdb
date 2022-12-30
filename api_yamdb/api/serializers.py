@@ -79,3 +79,6 @@ class CustomTokenSerializer(serializers.Serializer):
                                               'или кодом подтверждения не '
                                               'существует.')
         return attrs
+
+    def create(self, validated_data):
+        return validated_data

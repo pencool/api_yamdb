@@ -43,10 +43,13 @@ class SignupViewSet(mixins.CreateModelMixin,
 
 
 class CustomToken(APIView):
-    serializer_class = CustomTokenSerializer
 
     def post(self, request):
-        refresh = RefreshToken.for_user(request.user)
-        answer = {'access': str(refresh.access_token)}
-        return Response(answer, status=status.HTTP_200_OK)
-
+        serializer = CustomTokenSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            user = get_object_or_404(User, username=request.data['username'])
+            refresh = RefreshToken.for_user(user)
+            answer = {'access': str(refresh.access_token)}
+            return Response(answer, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
