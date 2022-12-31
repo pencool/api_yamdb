@@ -1,4 +1,3 @@
-from django.contrib.auth.tokens import default_token_generator
 from rest_framework import viewsets, status, mixins
 from rest_framework.views import APIView
 from rest_framework.decorators import action
