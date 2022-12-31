@@ -1,3 +1,4 @@
+from django.contrib.auth.tokens import default_token_generator
 from rest_framework import viewsets, status, mixins
 from rest_framework.views import APIView
 from rest_framework.decorators import action
@@ -7,25 +8,25 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from api.serializers import (UserSerializer, SignupSerializer,
                              CustomTokenSerializer, MeUserSerializer)
 from django.shortcuts import get_object_or_404
-from api.utils import generate_confirm_code
-from api.utils import send_confirm_email
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from api.permissions import IsAdminPermission
 
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     lookup_field = 'username'
+    permission_classes = (IsAdminPermission, )
 
     @action(methods=['get', 'patch'], detail=False,
             queryset=User.objects.all(),
-            permission_classes=(IsAuthenticated,),
-            url_path='me',
-    )
+            permission_classes=(IsAuthenticated, )
+            )
     def me(self, request):
         cur_user = get_object_or_404(User, username=request.user.username)
         if request.method == 'PATCH':
-            serializer = MeUserSerializer(data=request.data, partial=True)
+            serializer = MeUserSerializer(cur_user, data=request.data,
+                                          partial=True)
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -34,14 +35,19 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class SignupViewSet(mixins.CreateModelMixin,
+                    mixins.UpdateModelMixin,
                     viewsets.GenericViewSet):
     queryset = User.objects.all()
     serializer_class = SignupSerializer
+    permission_classes = (AllowAny, )
 
-    def perform_create(self, serializer):
-        conf_code = generate_confirm_code()
-        serializer.save(confirmation_code=conf_code)
-        send_confirm_email(conf_code, **self.request.data)
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            serializer.data, status=status.HTTP_200_OK, headers=headers)
 
 
 class CustomToken(APIView):

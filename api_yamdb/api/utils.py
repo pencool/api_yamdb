@@ -1,7 +1,6 @@
 from random import sample
 from string import ascii_letters, digits
 from django.core.mail import send_mail
-from yamdb.models import User
 
 
 def generate_confirm_code():
