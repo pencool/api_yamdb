@@ -42,6 +42,7 @@ class SignupSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(**validated_data)
         return user
 
+
     def validate(self, attrs):
         attrs.setdefault('confirmation_code', generate_confirm_code())
         if User.objects.filter(**attrs).exists():
