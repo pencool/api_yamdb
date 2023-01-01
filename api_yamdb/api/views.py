@@ -15,11 +15,11 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     lookup_field = 'username'
-    permission_classes = (IsAuthenticated, IsAdminPermission, )
+    permission_classes = (IsAuthenticated, IsAdminPermission,)
 
     @action(methods=['get', 'patch'], detail=False,
             queryset=User.objects.all(),
-            permission_classes=(IsAuthenticated, )
+            permission_classes=(IsAuthenticated,)
             )
     def me(self, request):
         cur_user = get_object_or_404(User, username=request.user.username)
@@ -38,7 +38,7 @@ class SignupViewSet(mixins.CreateModelMixin,
                     viewsets.GenericViewSet):
     queryset = User.objects.all()
     serializer_class = SignupSerializer
-    permission_classes = (AllowAny, )
+    permission_classes = (AllowAny,)
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)

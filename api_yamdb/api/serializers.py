@@ -1,6 +1,9 @@
+from django.core.exceptions import ObjectDoesNotExist
+from django.http import Http404
 from rest_framework import serializers
 from api.utils import generate_confirm_code
 from api.utils import send_confirm_email
+from rest_framework.validators import UniqueTogetherValidator
 from yamdb.models import User
 import re
 
@@ -24,6 +27,7 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
                                               'содержжать только буквы цифры и'
                                               ' следующие символы: @ . + -'
                                               '_')
+
         return data
 
 
@@ -32,21 +36,24 @@ class MeUserSerializer(UserSerializer):
 
 
 class SignupSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(required=True)
+    email = serializers.EmailField(required=True)
+
     class Meta:
+        fields = ('email', 'username')
         model = User
-        fields = ('username', 'email')
-        required_fields = ['username', 'email']
+        validators = (
+            UniqueTogetherValidator(
+                queryset=User.objects.all(),
+                fields=['username', 'email']
+            ),
+        )
 
     def create(self, validated_data):
-        validated_data.setdefault('confirmation_code', generate_confirm_code())
-        user = User.objects.create_user(**validated_data)
-        return user
+        send_confirm_email(**validated_data)
+        return validated_data
 
     def validate(self, attrs):
-        attrs.setdefault('confirmation_code', generate_confirm_code())
-        if User.objects.filter(**attrs).exists():
-            raise serializers.ValidationError('Такой пользователя и '
-                                              'email уже существует.')
         if attrs['username'] == 'me':
             raise serializers.ValidationError('me запрещено в качесвте '
                                               'имени пользователя!')
@@ -55,6 +62,13 @@ class SignupSerializer(serializers.ModelSerializer):
                                               'содержжать только буквы цифры и'
                                               ' следующие символы: @ . + -'
                                               '_')
+        # if not User.objects.filter(
+        #         username=attrs['username'],
+        #         email=attrs['email']).exists():
+        #     raise serializers.ValidationError('Пользователя с таким именем '
+        #                                       'или кодом подтверждения не '
+        #                                       'существует.')
+        attrs['confirmation_code'] = generate_confirm_code()
         return attrs
 
 

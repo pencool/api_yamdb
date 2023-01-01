@@ -9,5 +9,5 @@ router.register(r'auth\/signup', SignupViewSet)
 urlpatterns = [
     path('api/v1/auth/token/', CustomToken.as_view(),
          name='token_obtain_pair'),
-    path('api/v1/', include(router.urls))
+    path('api/v1/', include(router.urls)),
 ]
