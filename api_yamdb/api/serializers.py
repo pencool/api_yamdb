@@ -1,5 +1,3 @@
-from django.core.exceptions import ObjectDoesNotExist
-from django.http import Http404
 from rest_framework import serializers
 from api.utils import generate_confirm_code
 from api.utils import send_confirm_email
@@ -22,17 +20,28 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
         if data.get('username') == 'me':
             raise serializers.ValidationError('me запрещено в качесвте '
                                               'имени пользователя!')
-        if not re.fullmatch(r'[\w.@+-]+', data['username']):
-            raise serializers.ValidationError(' Имя пользователя может '
-                                              'содержжать только буквы цифры и'
-                                              ' следующие символы: @ . + -'
-                                              '_')
+        # if not re.fullmatch(r'[\w.@+-]+', data.get('username', '')):
+        #     raise serializers.ValidationError(' Имя пользователя может '
+        #                                       'содержжать только буквы цифры и'
+        #                                       ' следующие символы: @ . + -'
+        #                                       '_')
 
         return data
 
 
 class MeUserSerializer(UserSerializer):
     role = serializers.CharField(max_length=50, read_only=True)
+
+    # def validate(self, data):
+    #     if data.get('username') == 'me':
+    #         raise serializers.ValidationError('me запрещено в качесвте '
+    #                                           'имени пользователя!')
+    #     if not re.fullmatch(r'[\w.@+-]+', data.get('username', '')):
+    #         raise serializers.ValidationError(' Имя пользователя может '
+    #                                           'содержжать только буквы цифры и'
+    #                                           ' следующие символы: @ . + -'
+    #                                           '_')
+    #     return data
 
 
 class SignupSerializer(serializers.ModelSerializer):
@@ -44,7 +53,7 @@ class SignupSerializer(serializers.ModelSerializer):
                                        queryset=User.objects.all())])
 
     class Meta:
-        fields = ('email', 'username')
+        fields = ('username', 'email')
         model = User
 
     def create(self, validated_data):
@@ -65,13 +74,14 @@ class SignupSerializer(serializers.ModelSerializer):
         return attrs
 
 
-class RepSingUpSerializer(serializers.ModelSerializer):
+class RepSingUpSerializer(serializers.Serializer):
     username = serializers.CharField(required=True, max_length=150)
     email = serializers.EmailField(required=True, max_length=254)
 
-    class Meta:
-        fields = ('email', 'username')
-        model = User
+    def create(self, validated_data):
+        send_confirm_email(**validated_data)
+        user = User.objects.create(**validated_data)
+        return user
 
     def validate(self, attrs):
         if attrs['username'].lower() == 'me':
