@@ -12,9 +12,9 @@ class Review(models.Model):
         on_delete=models.CASCADE,
         related_name='reviews'
     )
-    score = models.IntegerField()
+    score = models.IntegerField(required=True)
     pub_date = models.DateTimeField(auto_now_add=True)
-    text = models.TextField()
+    text = models.TextField(required=True)
 
     class Meta:
         constraints = [
@@ -35,5 +35,5 @@ class Comment(models.Model):
         on_delete=models.CASCADE,
         related_name='comments'
     )
-    text = models.TextField()
+    text = models.TextField(required=True)
     pub_date = models.DateTimeField(auto_now_add=True)
