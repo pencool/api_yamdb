@@ -36,25 +36,19 @@ class MeUserSerializer(UserSerializer):
 
 
 class SignupSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(required=True)
-    email = serializers.EmailField(required=True)
+    username = serializers.CharField(required=True, max_length=150)
+    email = serializers.EmailField(required=True, max_length=254)
 
     class Meta:
         fields = ('email', 'username')
         model = User
-        validators = (
-            UniqueTogetherValidator(
-                queryset=User.objects.all(),
-                fields=['username', 'email']
-            ),
-        )
 
     def create(self, validated_data):
         send_confirm_email(**validated_data)
         return validated_data
 
     def validate(self, attrs):
-        if attrs['username'] == 'me':
+        if attrs['username'].lower() == 'me':
             raise serializers.ValidationError('me запрещено в качесвте '
                                               'имени пользователя!')
         if not re.fullmatch(r'[\w.@+-]+', attrs['username']):
@@ -62,12 +56,17 @@ class SignupSerializer(serializers.ModelSerializer):
                                               'содержжать только буквы цифры и'
                                               ' следующие символы: @ . + -'
                                               '_')
+
         # if not User.objects.filter(
         #         username=attrs['username'],
         #         email=attrs['email']).exists():
         #     raise serializers.ValidationError('Пользователя с таким именем '
         #                                       'или кодом подтверждения не '
         #                                       'существует.')
+        # user = User.objects.filter(
+        #         username=attrs['username'],
+        #         email=attrs['email'])
+        # del user
         attrs['confirmation_code'] = generate_confirm_code()
         return attrs
 
