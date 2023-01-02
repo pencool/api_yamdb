@@ -3,7 +3,7 @@ from django.http import Http404
 from rest_framework import serializers
 from api.utils import generate_confirm_code
 from api.utils import send_confirm_email
-from rest_framework.validators import UniqueTogetherValidator
+from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
 from yamdb.models import User
 import re
 
@@ -36,8 +36,12 @@ class MeUserSerializer(UserSerializer):
 
 
 class SignupSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(required=True, max_length=150)
-    email = serializers.EmailField(required=True, max_length=254)
+    username = serializers.CharField(required=True, max_length=150,
+                                     validators=[UniqueValidator(
+                                         queryset=User.objects.all())])
+    email = serializers.EmailField(required=True, max_length=254,
+                                   validators=[UniqueValidator(
+                                       queryset=User.objects.all())])
 
     class Meta:
         fields = ('email', 'username')
@@ -45,7 +49,8 @@ class SignupSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         send_confirm_email(**validated_data)
-        return validated_data
+        user = User.objects.create(**validated_data)
+        return user
 
     def validate(self, attrs):
         if attrs['username'].lower() == 'me':
@@ -56,17 +61,27 @@ class SignupSerializer(serializers.ModelSerializer):
                                               'содержжать только буквы цифры и'
                                               ' следующие символы: @ . + -'
                                               '_')
+        attrs['confirmation_code'] = generate_confirm_code()
+        return attrs
 
-        # if not User.objects.filter(
-        #         username=attrs['username'],
-        #         email=attrs['email']).exists():
-        #     raise serializers.ValidationError('Пользователя с таким именем '
-        #                                       'или кодом подтверждения не '
-        #                                       'существует.')
-        # user = User.objects.filter(
-        #         username=attrs['username'],
-        #         email=attrs['email'])
-        # del user
+
+class RepSingUpSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(required=True, max_length=150)
+    email = serializers.EmailField(required=True, max_length=254)
+
+    class Meta:
+        fields = ('email', 'username')
+        model = User
+
+    def validate(self, attrs):
+        if attrs['username'].lower() == 'me':
+            raise serializers.ValidationError('me запрещено в качесвте '
+                                              'имени пользователя!')
+        if not re.fullmatch(r'[\w.@+-]+', attrs['username']):
+            raise serializers.ValidationError(' Имя пользователя может '
+                                              'содержжать только буквы цифры и'
+                                              ' следующие символы: @ . + -'
+                                              '_')
         attrs['confirmation_code'] = generate_confirm_code()
         return attrs
 
