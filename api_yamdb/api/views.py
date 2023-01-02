@@ -5,8 +5,7 @@ from rest_framework.response import Response
 from yamdb.models import User
 from rest_framework_simplejwt.tokens import RefreshToken
 from api.serializers import (UserSerializer, SignupSerializer,
-                             CustomTokenSerializer, MeUserSerializer,
-                             RepSingUpSerializer)
+                             CustomTokenSerializer, MeUserSerializer )
 from django.shortcuts import get_object_or_404
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from api.permissions import IsAdminPermission
@@ -19,13 +18,13 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     http_method_names = ['get', 'patch', 'delete', 'post']
     lookup_field = 'username'
-    filter_backends = (filters.SearchFilter, )
-    search_fields = ('username', )
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('username',)
     permission_classes = (IsAuthenticated, IsAdminPermission,)
 
     @action(methods=['get', 'patch'], detail=False,
             queryset=User.objects.all(),
-            permission_classes=(IsAuthenticated, )
+            permission_classes=(IsAuthenticated,)
             )
     def me(self, request):
         cur_user = get_object_or_404(User, username=request.user.username)
@@ -64,12 +63,10 @@ class SignupViewSet(mixins.CreateModelMixin,
         username = request.data.get('username')
         email = request.data.get('email')
         if username is None:
-            return Response({'email': 'Must be filled',
-                             'username': 'Must be filled'},
+            return Response({"username": "Must be filled"},
                             status=status.HTTP_400_BAD_REQUEST)
         elif email is None:
-            return Response({email: 'Must be filled',
-                             username: 'Must be filled'},
+            return Response({"email": "Must be filled"},
                             status=status.HTTP_400_BAD_REQUEST)
         if User.objects.filter(username=request.data['username'],
                                email=request.data['email']).exists():
@@ -89,10 +86,14 @@ class CustomToken(APIView):
     permission_classes = (AllowAny,)
 
     def post(self, request):
+        # if not User.objects.filter(
+        #         username=request.data.get('username')).exists():
+        #     return Response('123', status=status.HTTP_404_NOT_FOUND)
+        user = get_object_or_404(User, username=request.data['username'])
         serializer = CustomTokenSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            user = get_object_or_404(User, username=request.data['username'])
+            #user = get_object_or_404(User, username=request.data['username'])
             refresh = RefreshToken.for_user(user)
             answer = {'access': str(refresh.access_token)}
             return Response(answer, status=status.HTTP_201_CREATED)

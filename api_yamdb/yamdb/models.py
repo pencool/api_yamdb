@@ -10,7 +10,6 @@ USER_ROLE_CHOICE = (
 
 class User(AbstractUser):
     """Кастомная модель User."""
-    username = models.CharField(max_length=150, unique=True)
     email = models.EmailField(max_length=254, unique=True)
     first_name = models.CharField(max_length=150, blank=True, null=True)
     last_name = models.CharField(max_length=150, blank=True, null=True)
