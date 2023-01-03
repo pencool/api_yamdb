@@ -7,6 +7,6 @@ router.register(r'users', UserViewSet)
 router.register(r'auth\/signup', SignupViewSet)
 
 urlpatterns = [
-    path('api/v1/auth/token/', CustomToken, name='token_obtain'),
-    path('api/v1/', include(router.urls)),
+    path('api/v1/auth/token/', CustomToken.as_view(), name='token_obtain'),
+    path('api/v1/', include(router.urls))
 ]

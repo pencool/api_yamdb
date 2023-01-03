@@ -86,15 +86,14 @@ class CustomToken(APIView):
     permission_classes = (AllowAny,)
 
     def post(self, request):
-        # if not User.objects.filter(
-        #         username=request.data.get('username')).exists():
-        #     return Response('123', status=status.HTTP_404_NOT_FOUND)
-        user = get_object_or_404(User, username=request.data['username'])
         serializer = CustomTokenSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            #user = get_object_or_404(User, username=request.data['username'])
+            user = get_object_or_404(User, username=request.data['username'])
             refresh = RefreshToken.for_user(user)
             answer = {'access': str(refresh.access_token)}
             return Response(answer, status=status.HTTP_201_CREATED)
+        if not User.objects.filter(
+                username=request.data.get('username')).exists():
+            return Response({'123'}, status=status.HTTP_404_NOT_FOUND)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
