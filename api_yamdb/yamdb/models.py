@@ -12,15 +12,13 @@ class Review(models.Model):
         on_delete=models.CASCADE,
         related_name='reviews'
     )
-    score = models.IntegerField(required=True)
+    score = models.IntegerField(blank=False, null=False)
     pub_date = models.DateTimeField(auto_now_add=True)
-    text = models.TextField(required=True)
+    text = models.TextField(blank=False, null=False)
 
     class Meta:
         constraints = [
-            models.CheckConstraint(
-                check=models.Q(score__range=(1, 10)),
-            ),
+            models.CheckConstraint(check=models.Q(score__range=(0, 10)), name='score'),
         ]
 
 
@@ -35,5 +33,5 @@ class Comment(models.Model):
         on_delete=models.CASCADE,
         related_name='comments'
     )
-    text = models.TextField(required=True)
+    text = models.TextField(blank=False, null=False)
     pub_date = models.DateTimeField(auto_now_add=True)
