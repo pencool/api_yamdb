@@ -6,6 +6,7 @@ from yamdb.models import User
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
+    """Сериалайзе для пользователя"""
     class Meta:
         model = User
         fields = (
@@ -24,10 +25,13 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class MeUserSerializer(UserSerializer):
+    """Сериалайзер для получения данных своей учетной записи"""
     role = serializers.CharField(max_length=50, read_only=True)
 
 
 class SignupSerializer(serializers.ModelSerializer):
+    """Сериалайзер для регистрации нового пользователя  получения кода
+    подтверждения для регистрации"""
     email = serializers.EmailField(required=True, max_length=254,
                                    validators=[UniqueValidator(
                                        queryset=User.objects.all())])
@@ -50,21 +54,8 @@ class SignupSerializer(serializers.ModelSerializer):
 
 
 class CustomTokenSerializer(serializers.Serializer):
+    """Сериалайзер для получения токена"""
     username = serializers.CharField(max_length=150, write_only=True,
                                      required=True)
-    confirmation_code = serializers.CharField(max_length=250,
-                                              write_only=True, required=True)
-
-    def validate(self, attrs):
-        if attrs.get('username') is None:
-            raise serializers.ValidationError('u')
-        if not User.objects.filter(
-                username=attrs['username'],
-                confirmation_code=attrs['confirmation_code']).exists():
-            raise serializers.ValidationError('Пользователя с таким именем '
-                                              'или кодом подтверждения не '
-                                              'существует.')
-        return attrs
-
-    def create(self, validated_data):
-        return validated_data
+    confirmation_code = serializers.CharField(max_length=250, write_only=True,
+                                              required=True)

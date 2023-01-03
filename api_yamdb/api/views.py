@@ -1,11 +1,12 @@
+from django.contrib.auth.tokens import default_token_generator
 from rest_framework import viewsets, status, mixins
 from rest_framework.views import APIView
-from rest_framework.decorators import action, api_view
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from yamdb.models import User
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import AccessToken
 from api.serializers import (UserSerializer, SignupSerializer,
-                             CustomTokenSerializer, MeUserSerializer )
+                             CustomTokenSerializer, MeUserSerializer)
 from django.shortcuts import get_object_or_404
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from api.permissions import IsAdminPermission
@@ -14,6 +15,7 @@ from rest_framework import filters
 
 
 class UserViewSet(viewsets.ModelViewSet):
+    """CRUD пользователя"""
     queryset = User.objects.all()
     serializer_class = UserSerializer
     http_method_names = ['get', 'patch', 'delete', 'post']
@@ -38,23 +40,11 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-# @api_view(['POST'])
-# def SignupViewSet(request):
-#     serializer = SignupSerializer(data=request.data)
-#     username = request.data.get('username')
-#     email = request.data.get('email')
-#     if serializer.is_valid():
-#         user = User.objects.filter(username=username)
-#         if not user.exists():
-#             User.objects.create(username=user, email=email)
-#         user.update(confirmation_code=generate_confirm_code())
-#         return Response(serializer.data, status=status.HTTP_200_OK)
-#     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
 class SignupViewSet(mixins.CreateModelMixin,
                     mixins.UpdateModelMixin,
                     viewsets.GenericViewSet):
+    """Создание пользователя или получение кода доступа для уже
+    зарегистрированного пользователя"""
     queryset = User.objects.all()
     serializer_class = SignupSerializer
     permission_classes = (AllowAny,)
@@ -62,12 +52,14 @@ class SignupViewSet(mixins.CreateModelMixin,
     def create(self, request, *args, **kwargs):
         username = request.data.get('username')
         email = request.data.get('email')
+        bad_answer = {
+            "username": ["Must be filled"],
+            "email": ["Must be filled"]
+        }
         if username is None:
-            return Response({"username": "Must be filled"},
-                            status=status.HTTP_400_BAD_REQUEST)
+            return Response(bad_answer, status=status.HTTP_400_BAD_REQUEST)
         elif email is None:
-            return Response({"email": "Must be filled"},
-                            status=status.HTTP_400_BAD_REQUEST)
+            return Response(bad_answer, status=status.HTTP_400_BAD_REQUEST)
         if User.objects.filter(username=request.data['username'],
                                email=request.data['email']).exists():
             code = generate_confirm_code()
@@ -83,17 +75,17 @@ class SignupViewSet(mixins.CreateModelMixin,
 
 
 class CustomToken(APIView):
+    """Получение токена"""
     permission_classes = (AllowAny,)
 
     def post(self, request):
         serializer = CustomTokenSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            user = get_object_or_404(User, username=request.data['username'])
-            refresh = RefreshToken.for_user(user)
-            answer = {'access': str(refresh.access_token)}
-            return Response(answer, status=status.HTTP_201_CREATED)
-        if not User.objects.filter(
-                username=request.data.get('username')).exists():
-            return Response({'123'}, status=status.HTTP_404_NOT_FOUND)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        username = serializer.validated_data['username']
+        confirmation_code = serializer.validated_data['confirmation_code']
+        user = get_object_or_404(User, username=username)
+        if default_token_generator.check_token(user, confirmation_code):
+            token = AccessToken.for_user(user)
+            return Response({'token': f'{token}'}, status=status.HTTP_200_OK)
+        return Response({'confirmation_code': 'Invalid confirmation_code'},
+                        status=status.HTTP_400_BAD_REQUEST)
