@@ -3,7 +3,7 @@ from yamdb.models import Title, Comment, Review
 from rest_framework import permissions, viewsets, filters
 from rest_framework.pagination import LimitOffsetPagination
 
-from .permissions import IsOwnerOrReadOnly, IsModeratorPermission
+from .permissions import IsOwnerOrReadOnlyPermission, IsModeratorPermission
 from .serializers import ReviewSerializer, CommentSerializer
 
 
