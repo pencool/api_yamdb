@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     #Local
     'api',
     'yamdb',
+    'corecommands',
 ]
 
 MIDDLEWARE = [
