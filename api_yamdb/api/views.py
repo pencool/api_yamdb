@@ -23,7 +23,7 @@ class CategoryViewSet(CustomViewSet):
 
 
 class GenreViewSet(CustomViewSet):
-    queryset = Genre.object.all()
+    queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (filters.SearchFilter,)
