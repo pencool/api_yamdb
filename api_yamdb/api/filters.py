@@ -1,5 +1,5 @@
 from django_filters import rest_framework as filters
-from yamdb.models import Title
+from reviews.models import Title
 
 
 class CharFilterInFilter(filters.CharFilter, filters.BaseInFilter):

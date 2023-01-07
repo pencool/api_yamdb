@@ -1,6 +1,7 @@
-from django.contrib.auth.models import AbstractUser
-from django.db import models
 from api.validators import year_validotor
+from django.contrib.auth.models import AbstractUser
+from django.core import validators
+from django.db import models
 
 USER_ROLE_CHOICE = (
     ('admin', 'Администратор'),
@@ -11,6 +12,7 @@ USER_ROLE_CHOICE = (
 
 class User(AbstractUser):
     """Кастомная модель User."""
+
     email = models.EmailField(max_length=254, unique=True)
     first_name = models.CharField(max_length=150, blank=True, null=True)
     last_name = models.CharField(max_length=150, blank=True, null=True)
@@ -65,7 +67,6 @@ class TitleGenre(models.Model):
 
     def __str__(self):
         return f'{self.title} {self.genre}'
-from django.db import models
 
 
 class Review(models.Model):
@@ -79,13 +80,23 @@ class Review(models.Model):
         on_delete=models.CASCADE,
         related_name='reviews'
     )
-    score = models.IntegerField(blank=False, null=False)
+    score = models.IntegerField(
+        blank=False,
+        null=False,
+        validators=(
+            validators.MinValueValidator(1),
+            validators.MaxValueValidator(10)
+        ),
+    )
     pub_date = models.DateTimeField(auto_now_add=True)
     text = models.TextField(blank=False, null=False)
 
     class Meta:
         constraints = [
-            models.CheckConstraint(check=models.Q(score__range=(0, 10)), name='score'),
+            models.UniqueConstraint(
+                fields=('title', 'author'),
+                name='one review per user'
+            )
         ]
 
 

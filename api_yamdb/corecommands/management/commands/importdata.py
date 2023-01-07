@@ -1,8 +1,9 @@
-from django.core.management.base import BaseCommand, CommandError
-from django.conf import settings
 import csv
-from yamdb.models import (User, Title, Genre, Category, TitleGenre,
-                          Review, Comment)
+
+from django.conf import settings
+from django.core.management.base import BaseCommand, CommandError
+from yamdb.models import (Category, Comment, Genre, Review, Title, TitleGenre,
+                          User)
 
 DATA = {
     User: 'users.csv',
