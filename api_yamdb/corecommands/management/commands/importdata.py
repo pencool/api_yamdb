@@ -2,17 +2,17 @@ import csv
 
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
-from yamdb.models import (Category, Comment, Genre, Review, Title, TitleGenre,
-                          User)
+from reviews.models import (Category, Comment, Genre, Review, Title,
+                            TitleGenre, User)
 
 DATA = {
     User: 'users.csv',
-    Category: 'category.csv',
-    Comment: 'comments.csv',
-    Review: 'review.csv',
     Genre: 'genre.csv',
+    Category: 'category.csv',
+    Title: 'titles.csv',
     TitleGenre: 'genre_title.csv',
-    Title: 'titles.csv'
+    Review: 'review.csv',
+    Comment: 'comments.csv',
 }
 
 
@@ -38,19 +38,22 @@ class Command(BaseCommand):
             if options['full_path']:
                 path = f'{options["full_path"]}/{data_sheet}'
                 path.replace('\\', '/')
-                print(path)
             else:
                 path = settings.BASE_DIR / f'{options["path"]}{data_sheet}'
             try:
                 with open(path, 'r', encoding='utf-8') as f:
-                    reader = csv.DictReader(f)
-                    clear_data = []
-                    for i in reader:
-                        del i['id']
-                        clear_data.append(i)
-                    model.objects.bulk_create(model(**data) for data in
-                                              clear_data)
-                    print(clear_data)
-                    self.stdout.write(self.style.SUCCESS('Импорт выполнен.'))
+                    clear_data = {}
+                    for i in csv.DictReader(f):
+                        for k, v in i.items():
+                            if k == 'author':
+                                clear_data[k] = User.objects.get(id=int(v))
+                            elif k == 'category':
+                                clear_data[k] = Category.objects.get(id=int(v))
+                            else:
+                                clear_data[k] = v
+                        model.objects.get_or_create(**clear_data)
+                        self.stdout.write(f'{clear_data}=='
+                                          f'{self.style.SUCCESS("OK")}')
             except FileNotFoundError:
                 raise CommandError('Не найден файл или неверно указан путь.')
+        self.stdout.write(self.style.SUCCESS('Импорт выполнен.'))

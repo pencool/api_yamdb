@@ -50,9 +50,9 @@ class Title(models.Model):
     year = models.PositiveSmallIntegerField(validators=[year_validotor],
                                             verbose_name='Год выхода')
     description = models.TextField(verbose_name='Описание')
-    genre = models.ManyToManyField(Genre, through='TitleGenre',
+    genre = models.ManyToManyField('Genre', through='TitleGenre',
                                    related_name='genre', verbose_name='Жанр')
-    category = models.ForeignKey(Category, blank=True, null=True,
+    category = models.ForeignKey('Category', blank=True, null=True,
                                  on_delete=models.SET_NULL,
                                  related_name='category',
                                  verbose_name='Категория')
@@ -62,8 +62,8 @@ class Title(models.Model):
 
 
 class TitleGenre(models.Model):
-    title = models.ForeignKey(Title, on_delete=models.CASCADE)
-    genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
+    title = models.ForeignKey('Title', on_delete=models.CASCADE)
+    genre = models.ForeignKey('Genre', on_delete=models.CASCADE)
 
     def __str__(self):
         return f'{self.title} {self.genre}'
@@ -71,12 +71,12 @@ class TitleGenre(models.Model):
 
 class Review(models.Model):
     author = models.ForeignKey(
-        User,
+        'User',
         on_delete=models.CASCADE,
         related_name='reviews'
     )
     title = models.ForeignKey(
-        Title,
+        'Title',
         on_delete=models.CASCADE,
         related_name='reviews'
     )
@@ -102,12 +102,12 @@ class Review(models.Model):
 
 class Comment(models.Model):
     author = models.ForeignKey(
-        User,
+        'User',
         on_delete=models.CASCADE,
         related_name='comments'
     )
     review = models.ForeignKey(
-        Review,
+        'Review',
         on_delete=models.CASCADE,
         related_name='comments'
     )
