@@ -2,11 +2,12 @@ from rest_framework import serializers
 from api.utils import generate_confirm_code
 from api.utils import send_confirm_email
 from rest_framework.validators import UniqueValidator
-from yamdb.models import User
+from yamdb.models import User, Title, Genre, Category, TitleGenre
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
     """Сериалайзе для пользователя"""
+
     class Meta:
         model = User
         fields = (
@@ -59,3 +60,37 @@ class CustomTokenSerializer(serializers.Serializer):
                                      required=True)
     confirmation_code = serializers.CharField(max_length=250, write_only=True,
                                               required=True)
+
+
+##############################################################################
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ('name', 'slug')
+
+
+class GenreSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Genre
+        fields = ('name', 'slug')
+
+
+class TitleEditSerializer(serializers.ModelSerializer):
+    category = serializers.SlugRelatedField(queryset=Category.objects.all(),
+                                            slug_field='slug')
+    genre = serializers.SlugRelatedField(queryset=Genre.objects.all(),
+                                         slug_field='slug', many=True)
+
+    class Meta:
+        model = Title
+        fields = ('__all__')
+
+
+class TitleReadSerializer(serializers.ModelSerializer):
+    category = CategorySerializer(read_only=True)
+    genre = GenreSerializer(read_only=True, many=True)
+
+    class Meta:
+        model = Title
+        fields = ('__all__')

@@ -3,15 +3,19 @@ from rest_framework import viewsets, status, mixins
 from rest_framework.views import APIView
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from yamdb.models import User
+from yamdb.models import User, Title, Genre, Category, TitleGenre
 from rest_framework_simplejwt.tokens import AccessToken
 from api.serializers import (UserSerializer, SignupSerializer,
-                             CustomTokenSerializer, MeUserSerializer)
+                             CustomTokenSerializer, MeUserSerializer,
+                             GenreSerializer, CategorySerializer,
+                             TitleEditSerializer, TitleReadSerializer)
 from django.shortcuts import get_object_or_404
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from api.permissions import IsAdminPermission
+from api.permissions import IsAdminPermission, IsAdminOrReadOnly
 from api.utils import generate_confirm_code
 from rest_framework import filters
+from django_filters.rest_framework import DjangoFilterBackend
+from api.filters import TitleFilter
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -89,3 +93,41 @@ class CustomToken(APIView):
             return Response({'token': f'{token}'}, status=status.HTTP_200_OK)
         return Response({'confirmation_code': 'Invalid confirmation_code'},
                         status=status.HTTP_400_BAD_REQUEST)
+
+
+###############################################################################
+
+class CategoryViewSet(mixins.ListModelMixin,
+                      mixins.CreateModelMixin,
+                      mixins.DestroyModelMixin,
+                      viewsets.GenericViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    lookup_field = 'slug'
+    permission_classes = (IsAdminOrReadOnly,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
+
+
+class GenreViewSet(mixins.ListModelMixin,
+                   mixins.CreateModelMixin,
+                   mixins.DestroyModelMixin,
+                   viewsets.GenericViewSet):
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
+    lookup_field = 'slug'
+    permission_classes = (IsAdminOrReadOnly,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
+
+
+class TitleViewSet(viewsets.ModelViewSet):
+    queryset = Title.objects.all()
+    permission_classes = (IsAdminOrReadOnly, )
+    filter_backends = (DjangoFilterBackend, )
+    filterset_class = TitleFilter
+
+    def get_serializer_class(self):
+        if self.action in ['retrieve', 'list']:
+            return TitleReadSerializer
+        return TitleEditSerializer
