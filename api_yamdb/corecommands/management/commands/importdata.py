@@ -17,14 +17,14 @@ DATA = {
 
 
 class Command(BaseCommand):
-    help = (f'Команда предназначена для импорта данных из csv файлов в базу '
-            f'данных. Во всех путях стоит указывать "/" вместо "\\".')
+    help = ('Команда предназначена для импорта данных из csv файлов в базу '
+            'данных. Во всех путях стоит указывать "/" вместо "\\".')
 
     def add_arguments(self, parser):
         parser.add_argument(
             '--path',
             type=str,
-            default=f'static/data/',
+            default='static/data/',
             help='Указывается путь относительно вашей '
                  'BASE_DIR, по умолчанию static/data/')
         parser.add_argument('--full_path',

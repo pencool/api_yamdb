@@ -9,7 +9,7 @@ def generate_confirm_code():
 
 
 def send_confirm_email(confirmation_code, username, email):
-    send_mail(subject=f'Yamdb Verification.',
+    send_mail(subject='Yamdb Verification.',
               message=f'Привет {username}, используйте этот код '
               f'{confirmation_code}, для регистрации на Yamdb!',
               from_email='admin@yamdb.ru',
