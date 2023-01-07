@@ -1,8 +1,9 @@
+from api.utils import generate_confirm_code, send_confirm_email
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from api.utils import generate_confirm_code
-from api.utils import send_confirm_email
+from rest_framework.relations import SlugRelatedField
 from rest_framework.validators import UniqueValidator
-from yamdb.models import User, Title, Genre, Category, TitleGenre
+from reviews.models import Category, Comment, Genre, Review, Title, User
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
@@ -62,8 +63,6 @@ class CustomTokenSerializer(serializers.Serializer):
                                               required=True)
 
 
-##############################################################################
-
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
@@ -90,7 +89,40 @@ class TitleEditSerializer(serializers.ModelSerializer):
 class TitleReadSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
     genre = GenreSerializer(read_only=True, many=True)
+    rating = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Title
         fields = ('__all__')
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    author = SlugRelatedField(slug_field='username', read_only=True)
+    review = serializers.SlugRelatedField(
+        slug_field='text',
+        read_only=True
+    )
+
+    class Meta:
+        fields = '__all__'
+        model = Comment
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    author = SlugRelatedField(slug_field='username', read_only=True)
+    title = SlugRelatedField(slug_field='name', read_only=True)
+
+    class Meta:
+        fields = '__all__'
+        model = Review
+
+    def validate(self, data):
+        if self.context['request'].method == 'POST':
+            title = get_object_or_404(
+                Title,
+                pk=self.context.get('view').kwargs.get('title_id')
+            )
+            user = self.context['request'].user
+            if user.reviews.filter(title=title).exists():
+                raise serializers.ValidationError('Review already exists')
+        return data

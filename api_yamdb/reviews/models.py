@@ -1,6 +1,7 @@
-from django.contrib.auth.models import AbstractUser
-from django.db import models
 from api.validators import year_validotor
+from django.contrib.auth.models import AbstractUser
+from django.core import validators
+from django.db import models
 
 USER_ROLE_CHOICE = (
     ('admin', 'Администратор'),
@@ -11,6 +12,7 @@ USER_ROLE_CHOICE = (
 
 class User(AbstractUser):
     """Кастомная модель User."""
+
     email = models.EmailField(max_length=254, unique=True)
     first_name = models.CharField(max_length=150, blank=True, null=True)
     last_name = models.CharField(max_length=150, blank=True, null=True)
@@ -65,3 +67,49 @@ class TitleGenre(models.Model):
 
     def __str__(self):
         return f'{self.title} {self.genre}'
+
+
+class Review(models.Model):
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='reviews'
+    )
+    title = models.ForeignKey(
+        Title,
+        on_delete=models.CASCADE,
+        related_name='reviews'
+    )
+    score = models.IntegerField(
+        blank=False,
+        null=False,
+        validators=(
+            validators.MinValueValidator(1),
+            validators.MaxValueValidator(10)
+        ),
+    )
+    pub_date = models.DateTimeField(auto_now_add=True)
+    text = models.TextField(blank=False, null=False)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=('title', 'author'),
+                name='one review per user'
+            )
+        ]
+
+
+class Comment(models.Model):
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='comments'
+    )
+    review = models.ForeignKey(
+        Review,
+        on_delete=models.CASCADE,
+        related_name='comments'
+    )
+    text = models.TextField(blank=False, null=False)
+    pub_date = models.DateTimeField(auto_now_add=True)
