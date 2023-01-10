@@ -1,6 +1,7 @@
 from api.validators import year_validator
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.core import validators
+from rest_framework import serializers
 from django.db import models
 from django.conf import settings
 
@@ -18,13 +19,23 @@ class MyUserManager(BaseUserManager):
         if not email:
             raise ValueError('email must be filled.')
         if username.lower() == 'me':
-            raise ValueError("me can't use ase username.")
+            raise serializers.ValidationError("me can't use as username.")
         user = self.model(username=username,
                           email=self.normalize_email(email),
                           **kwargs
                           )
         user.set_password(password)
         user.save(using=self._db)
+        return user
+
+    def create_superuser(self, username, email, password=None, **kwargs):
+        user = self.create_user(username=username,
+                                email=self.normalize_email(email),
+                                password=password, **kwargs)
+        user.role = 'admin'
+        user.is_superuser = True
+        user.is_staff = True
+        user.save()
         return user
 
 
@@ -39,6 +50,8 @@ class User(AbstractUser):
                             default='user')
     confirmation_code = models.CharField(max_length=250, blank=True, null=True)
     password = models.CharField(max_length=254, blank=True, null=True)
+
+    objects = MyUserManager()
 
     @property
     def is_admin(self):

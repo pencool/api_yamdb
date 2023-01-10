@@ -66,12 +66,9 @@ class SignupViewSet(mixins.CreateModelMixin,
             "username": ["Must be filled"],
             "email": ["Must be filled"]
         }
-        if username is None:
+        if username is None or email is None:
             return Response(bad_answer, status=status.HTTP_400_BAD_REQUEST)
-        elif email is None:
-            return Response(bad_answer, status=status.HTTP_400_BAD_REQUEST)
-        if User.objects.filter(username=request.data['username'],
-                               email=request.data['email']).exists():
+        if User.objects.filter(username=username, email=email).exists():
             code = generate_confirm_code()
             User.objects.filter(username=request.data['username']).update(
                 confirmation_code=code)

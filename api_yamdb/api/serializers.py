@@ -32,15 +32,16 @@ class SignupSerializer(serializers.ModelSerializer):
         model = User
 
     def create(self, validated_data):
+        validated_data['confirmation_code'] = generate_confirm_code()
         send_confirm_email(**validated_data)
-        user = User.objects.create(**validated_data)
+        user = User.objects.create_user(**validated_data)
         return user
 
-    def validate(self, attrs):
-        if attrs['username'].lower() == 'me':
-            raise serializers.ValidationError("me can't use ase username.")
-        attrs['confirmation_code'] = generate_confirm_code()
-        return attrs
+    # def validate(self, attrs):
+    #     # if attrs['username'].lower() == 'me':
+    #     #     raise serializers.ValidationError("me can't use ase username.")
+    #     attrs['confirmation_code'] = generate_confirm_code()
+    #     return attrs
 
 
 class CustomTokenSerializer(serializers.Serializer):
