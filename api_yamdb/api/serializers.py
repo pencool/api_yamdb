@@ -14,12 +14,6 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
         fields = (
             'username', 'email', 'first_name', 'last_name', 'bio', 'role')
 
-    def validate(self, data):
-        if data.get('username') in ['me', 'Me', 'mE', 'ME']:
-            raise serializers.ValidationError("me can't use ase username.")
-
-        return data
-
 
 class MeUserSerializer(UserSerializer):
     """Сериалайзер для получения данных своей учетной записи"""

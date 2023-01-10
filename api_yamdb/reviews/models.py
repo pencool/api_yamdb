@@ -1,5 +1,5 @@
 from api.validators import year_validator
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.core import validators
 from django.db import models
 from django.conf import settings
@@ -9,6 +9,23 @@ USER_ROLE_CHOICE = (
     (settings.MODER, 'Модератор'),
     (settings.USER, 'Пользователь'),
 )
+
+
+class MyUserManager(BaseUserManager):
+    def create_user(self, username, email, password=None, **kwargs):
+        if not username:
+            raise ValueError('username must be filled.')
+        if not email:
+            raise ValueError('email must be filled.')
+        if username.lower() == 'me':
+            raise ValueError("me can't use ase username.")
+        user = self.model(username=username,
+                          email=self.normalize_email(email),
+                          **kwargs
+                          )
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
 
 
 class User(AbstractUser):
@@ -40,7 +57,8 @@ class User(AbstractUser):
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=256, verbose_name='Название категории',)
+    name = models.CharField(max_length=256,
+                            verbose_name='Название категории', )
     slug = models.SlugField(max_length=50, unique=True)
 
     def __str__(self):
@@ -98,7 +116,7 @@ class Review(models.Model):
                 1, message="Value can't be a less then 1."),
             validators.MaxValueValidator(
                 10, message="Value can't be a more then 10."))
-        )
+    )
 
     pub_date = models.DateTimeField(auto_now_add=True)
     text = models.TextField(blank=False, null=False)
