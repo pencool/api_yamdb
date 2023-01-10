@@ -62,7 +62,8 @@ class SignupViewSet(mixins.CreateModelMixin,
     def create(self, request, *args, **kwargs):
         username, email = request.data.get('username'), request.data.get(
             'email')
-        if User.objects.filter(username=username, email=email).exists():
+        if User.objects.filter(username__iexact=username,
+                               email__iexact=email).exists():
             code = generate_confirm_code()
             User.objects.filter(
                 username=username).update(confirmation_code=code)
