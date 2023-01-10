@@ -60,18 +60,12 @@ class SignupViewSet(mixins.CreateModelMixin,
     permission_classes = (AllowAny,)
 
     def create(self, request, *args, **kwargs):
-        username = request.data.get('username')
-        email = request.data.get('email')
-        bad_answer = {
-            "username": ["Must be filled"],
-            "email": ["Must be filled"]
-        }
-        if username is None or email is None:
-            return Response(bad_answer, status=status.HTTP_400_BAD_REQUEST)
+        username, email = request.data.get('username'), request.data.get(
+            'email')
         if User.objects.filter(username=username, email=email).exists():
             code = generate_confirm_code()
-            User.objects.filter(username=request.data['username']).update(
-                confirmation_code=code)
+            User.objects.filter(
+                username=username).update(confirmation_code=code)
             return Response(status=status.HTTP_200_OK)
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)

@@ -37,12 +37,6 @@ class SignupSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(**validated_data)
         return user
 
-    # def validate(self, attrs):
-    #     # if attrs['username'].lower() == 'me':
-    #     #     raise serializers.ValidationError("me can't use ase username.")
-    #     attrs['confirmation_code'] = generate_confirm_code()
-    #     return attrs
-
 
 class CustomTokenSerializer(serializers.Serializer):
     """Сериалайзер для получения токена"""
