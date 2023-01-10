@@ -31,7 +31,6 @@ class Command(BaseCommand):
                             type=str,
                             help='Указывается полный путь к директории '
                                  'с CSV файлами.')
-        pass
 
     def handle(self, *args, **options):
         for model, data_sheet in DATA.items():

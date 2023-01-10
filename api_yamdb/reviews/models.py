@@ -1,12 +1,13 @@
-from api.validators import year_validotor
+from api.validators import year_validator
 from django.contrib.auth.models import AbstractUser
 from django.core import validators
 from django.db import models
+from django.conf import settings
 
 USER_ROLE_CHOICE = (
-    ('admin', 'Администратор'),
-    ('moderator', 'Модератор'),
-    ('user', 'Пользователь'),
+    (settings.ADMIN, 'Администратор'),
+    (settings.MODER, 'Модератор'),
+    (settings.USER, 'Пользователь'),
 )
 
 
@@ -22,8 +23,17 @@ class User(AbstractUser):
     confirmation_code = models.CharField(max_length=250, blank=True, null=True)
     password = models.CharField(max_length=254, blank=True, null=True)
 
-    USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['email']
+    @property
+    def is_admin(self):
+        return self.role == settings.ADMIN or self.is_superuser
+
+    @property
+    def is_user(self):
+        return self.role == settings.USER
+
+    @property
+    def is_moder(self):
+        return self.role == settings.MODER
 
     def __str__(self):
         return self.username
@@ -47,7 +57,7 @@ class Genre(models.Model):
 
 class Title(models.Model):
     name = models.CharField(max_length=256, verbose_name='Название')
-    year = models.PositiveSmallIntegerField(validators=[year_validotor],
+    year = models.PositiveSmallIntegerField(validators=[year_validator],
                                             verbose_name='Год выхода')
     description = models.TextField(verbose_name='Описание')
     genre = models.ManyToManyField('Genre', through='TitleGenre',
@@ -84,10 +94,12 @@ class Review(models.Model):
         blank=False,
         null=False,
         validators=(
-            validators.MinValueValidator(1),
-            validators.MaxValueValidator(10)
-        ),
-    )
+            validators.MinValueValidator(
+                1, message="Value can't be a less then 1."),
+            validators.MaxValueValidator(
+                10, message="Value can't be a more then 10."))
+        )
+
     pub_date = models.DateTimeField(auto_now_add=True)
     text = models.TextField(blank=False, null=False)
 

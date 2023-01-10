@@ -13,15 +13,10 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
         model = User
         fields = (
             'username', 'email', 'first_name', 'last_name', 'bio', 'role')
-        extra_kwargs = {
-            'url': {'lookup_field': 'username'},
-        }
-        required_fields = ['username', 'email']
 
     def validate(self, data):
-        if data.get('username') == 'me':
-            raise serializers.ValidationError('me запрещено в качесвте '
-                                              'имени пользователя!')
+        if data.get('username') in ['me', 'Me', 'mE', 'ME']:
+            raise serializers.ValidationError("me can't use ase username.")
 
         return data
 
@@ -49,8 +44,7 @@ class SignupSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         if attrs['username'].lower() == 'me':
-            raise serializers.ValidationError('me запрещено в качесвте '
-                                              'имени пользователя!')
+            raise serializers.ValidationError("me can't use ase username.")
         attrs['confirmation_code'] = generate_confirm_code()
         return attrs
 
