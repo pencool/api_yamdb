@@ -20,7 +20,7 @@ class MyUserManager(BaseUserManager):
             raise ValueError('email must be filled.')
         if username.lower() == 'me':
             raise serializers.ValidationError("me can't use as username.")
-        user = self.model(username=username,
+        user = self.model(username=username.lower(),
                           email=self.normalize_email(email),
                           **kwargs
                           )
@@ -30,9 +30,9 @@ class MyUserManager(BaseUserManager):
 
     def create_superuser(self, username, email, password=None, **kwargs):
         user = self.create_user(username=username,
-                                email=self.normalize_email(email),
+                                email=email,
                                 password=password, **kwargs)
-        user.role = 'admin'
+        user.role = settings.ADMIN
         user.is_superuser = True
         user.is_staff = True
         user.save()
